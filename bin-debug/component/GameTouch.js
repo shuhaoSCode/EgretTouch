@@ -35,8 +35,11 @@ var core;
                 _this._imgResList = imgResList;
                 _this._imgWidth = imgWidth;
                 _this._indexItem = 0;
+                _this._isMove = false;
+                _this._ipl = ipl;
                 _this._imgList = new Array();
                 _this._imgMoveBeforeX = new Array();
+                //初始化页面
                 _this._initViewPager();
                 return _this;
             }
@@ -68,22 +71,44 @@ var core;
                         //当前选中的item
                         this._touchItem = imageItem;
                         //设置偏移量
-                        this.offsetItemX = e.stageX - imageItem.x;
-                        this.addEventListener(egret.TouchEvent.TOUCH_MOVE, this.onItemgMove, this);
+                        this._offsetItemX = e.stageX - imageItem.x;
+                        //保存当前item下标
+                        this._indexTouchItem = this._getIndex(imageItem);
+                        //设置移动监听器
+                        this.addEventListener(egret.TouchEvent.TOUCH_MOVE, this.onItemMove, this);
                         console.log("begin");
                     }, this_1);
                     //滑动结束监听
                     imageItem.addEventListener(egret.TouchEvent.TOUCH_END, function (e) {
-                        this.removeEventListener(egret.TouchEvent.TOUCH_MOVE, this.onItemgMove, this);
+                        //取消监听器
+                        this.removeEventListener(egret.TouchEvent.TOUCH_MOVE, this.onItemMove, this);
                         console.log("end");
-                        for (var i_1 = 0; i_1 < this._imgList.length; i_1++) {
-                            var item = this._imgList[i_1];
-                            GCAnimation.translateAnimation(item, 200, { x: item.x + (this.width / 2 - this._imgList[this._indexItem].x - this._imgWidth / 2), y: item.y });
+                        //设置监听&&判断是否出发onM
+                        if (this._isMove) {
+                            this._ipl.selectIndex(this._indexItem);
+                            //图片位置调整
+                            for (var i_1 = 0; i_1 < this._imgList.length; i_1++) {
+                                var item = this._imgList[i_1];
+                                GCAnimation.translateAnimation(item, 200, { x: item.x + (this.width / 2 - this._imgList[this._indexItem].x - this._imgWidth / 2), y: item.y });
+                            }
                         }
-                    }, this_1);
-                    //单击事件
-                    imageItem.addEventListener(egret.TouchEvent.TOUCH_END, function (e) {
-                        console.log("top");
+                        else {
+                            if (this._indexTouchItem == this._indexItem) {
+                                this._ipl.clickIndex(this._indexItem);
+                            }
+                            else {
+                                console.log(this._indexTouchItem);
+                                // for (let i = 0; i < this._imgList.length; i++) {
+                                //     let item = this._imgList[i];
+                                //     GCAnimation.translateAnimation(item, 200, { x: item.x + (this.width / 2 - this._imgList[this._indexTouchItem].x - this._imgWidth / 2), y: item.y });
+                                //     this._indexItem = this._indexTouchItem;
+                                //     this.updateIndex();
+                                //     GCFilter.halo(this._imgList[this._indexTouchItem]);
+                                // }
+                                this._ipl.clickIndex(this._indexTouchItem);
+                            }
+                        }
+                        this._isMove = false;
                     }, this_1);
                 };
                 var this_1 = this;
@@ -92,23 +117,25 @@ var core;
                 }
             };
             //移动时执行
-            ImageViewpager.prototype.onItemgMove = function (e) {
+            ImageViewpager.prototype.onItemMove = function (e) {
+                this._isMove = true;
                 //当前选中item的下标
-                var index = this._getIndex(this._touchItem);
-                this._imgList[index].x = e.stageX - this.offsetItemX;
+                var index = this._indexTouchItem;
+                //设置偏移量
+                this._imgList[index].x = e.stageX - this._offsetItemX;
                 for (var i = 0; i < this._imgResList.length; i++) {
                     var num = i - index;
                     if (num > 0) {
-                        this._imgList[i].x = e.stageX - this.offsetItemX + (num * (this._imgWidth + this._split));
+                        this._imgList[i].x = e.stageX - this._offsetItemX + (num * (this._imgWidth + this._split));
                     }
                     else if (num < 0) {
-                        this._imgList[i].x = e.stageX - this.offsetItemX - (Math.abs(num) * (this._imgWidth + this._split));
+                        this._imgList[i].x = e.stageX - this._offsetItemX - (Math.abs(num) * (this._imgWidth + this._split));
                     }
                 }
-                console.log("onMove");
                 this.updateIndex();
                 this.updateIndex();
                 GCFilter.halo(this._imgList[this._indexItem]);
+                console.log("onMove");
             };
             //获取当前下标
             ImageViewpager.prototype._getIndex = function (img) {

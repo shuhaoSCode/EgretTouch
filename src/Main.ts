@@ -207,8 +207,23 @@ class Main extends eui.UILayer {
         imgArray.push("egret_icon_png");
         imgArray.push("bg_jpg");
         imgArray.push("checkbox_select_disabled_png");
+        imgArray.push("egret_icon_png");
+        imgArray.push("bg_jpg");
+        imgArray.push("checkbox_select_disabled_png");
+        imgArray.push("egret_icon_png");
+        imgArray.push("bg_jpg");
+        imgArray.push("checkbox_select_disabled_png");
+        imgArray.push("egret_icon_png");
+        imgArray.push("bg_jpg");
+        imgArray.push("checkbox_select_disabled_png");
 
-        let imageViewpager = new core.component.ImageViewpager({x:this.width,y:300},300,50,imgArray);
+        let imageViewpager = new core.component.ImageViewpager({ x: this.width, y: 300 }, 300, 50, imgArray, {
+            clickIndex: (clickIndex: number) => {
+                console.log("click:" + clickIndex);
+            }, selectIndex: (selectIndex: number) => {
+                console.log("selectIndex:" + selectIndex);
+            }
+        });
         imageViewpager.bottom = 400;
         this.addChild(imageViewpager);
     }

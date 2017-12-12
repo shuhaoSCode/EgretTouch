@@ -16,6 +16,7 @@ namespace core.component {
         private _touchItem: eui.Image;
         private _indexItem: number;
         private _isMove: boolean;
+        private _indexTouchItem: number;
 
         //item点击回调
         private _ipl: ImagePagerlistener;
@@ -78,32 +79,52 @@ namespace core.component {
                     this._touchItem = imageItem;
                     //设置偏移量
                     this._offsetItemX = e.stageX - imageItem.x;
-                    this.addEventListener(egret.TouchEvent.TOUCH_MOVE, this.onItemgMove, this);
+                    //保存当前item下标
+                    this._indexTouchItem = this._getIndex(imageItem);
+                    //设置移动监听器
+                    this.addEventListener(egret.TouchEvent.TOUCH_MOVE, this.onItemMove, this);
                     console.log("begin");
                 }, this);
 
                 //滑动结束监听
                 imageItem.addEventListener(egret.TouchEvent.TOUCH_END, function (e: egret.TouchEvent) {
-                    this.removeEventListener(egret.TouchEvent.TOUCH_MOVE, this.onItemgMove, this);
+                    //取消监听器
+                    this.removeEventListener(egret.TouchEvent.TOUCH_MOVE, this.onItemMove, this);
                     console.log("end");
-                    //图片位置调整
-                    for (let i = 0; i < this._imgList.length; i++) {
-                        let item = this._imgList[i];
-                        GCAnimation.translateAnimation(item, 200, { x: item.x + (this.width / 2 - this._imgList[this._indexItem].x - this._imgWidth / 2), y: item.y });
-                    }
-                    //设置监听
+                    //设置监听&&判断是否出发onM
                     if (this._isMove) {
-                        
+                        this._ipl.selectIndex(this._indexItem);
+                        //图片位置调整
+                        for (let i = 0; i < this._imgList.length; i++) {
+                            let item = this._imgList[i];
+                            GCAnimation.translateAnimation(item, 200, { x: item.x + (this.width / 2 - this._imgList[this._indexItem].x - this._imgWidth / 2), y: item.y });
+                        }
+                    } else {
+                        if (this._indexTouchItem == this._indexItem) {
+                            this._ipl.clickIndex(this._indexItem);
+                        } else {
+                            console.log(this._indexTouchItem);
+                            // for (let i = 0; i < this._imgList.length; i++) {
+                            //     let item = this._imgList[i];
+                            //     GCAnimation.translateAnimation(item, 200, { x: item.x + (this.width / 2 - this._imgList[this._indexTouchItem].x - this._imgWidth / 2), y: item.y });
+                            //     this._indexItem = this._indexTouchItem;
+                            //     this.updateIndex();
+                            //     GCFilter.halo(this._imgList[this._indexTouchItem]);
+                            // }
+                            this._ipl.clickIndex(this._indexTouchItem);
+                        }
                     }
+                    this._isMove = false;
                 }, this);
             }
         }
 
         //移动时执行
-        private onItemgMove(e: egret.TouchEvent): void {
+        private onItemMove(e: egret.TouchEvent): void {
             this._isMove = true;
             //当前选中item的下标
-            let index = this._getIndex(this._touchItem);
+            let index = this._indexTouchItem;
+            //设置偏移量
             this._imgList[index].x = e.stageX - this._offsetItemX;
             for (let i = 0; i < this._imgResList.length; i++) {
                 let num = i - index;
@@ -113,10 +134,10 @@ namespace core.component {
                     this._imgList[i].x = e.stageX - this._offsetItemX - (Math.abs(num) * (this._imgWidth + this._split));
                 }
             }
-            console.log("onMove");
             this.updateIndex();
             this.updateIndex();
             GCFilter.halo(this._imgList[this._indexItem]);
+            console.log("onMove");
         }
 
         //获取当前下标

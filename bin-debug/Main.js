@@ -204,7 +204,22 @@ var Main = (function (_super) {
         imgArray.push("egret_icon_png");
         imgArray.push("bg_jpg");
         imgArray.push("checkbox_select_disabled_png");
-        var imageViewpager = new core.component.ImageViewpager({ x: this.width, y: 300 }, 300, 50, imgArray);
+        imgArray.push("egret_icon_png");
+        imgArray.push("bg_jpg");
+        imgArray.push("checkbox_select_disabled_png");
+        imgArray.push("egret_icon_png");
+        imgArray.push("bg_jpg");
+        imgArray.push("checkbox_select_disabled_png");
+        imgArray.push("egret_icon_png");
+        imgArray.push("bg_jpg");
+        imgArray.push("checkbox_select_disabled_png");
+        var imageViewpager = new core.component.ImageViewpager({ x: this.width, y: 300 }, 300, 50, imgArray, {
+            clickIndex: function (clickIndex) {
+                console.log("click:" + clickIndex);
+            }, selectIndex: function (selectIndex) {
+                console.log("selectIndex:" + selectIndex);
+            }
+        });
         imageViewpager.bottom = 400;
         this.addChild(imageViewpager);
     };
