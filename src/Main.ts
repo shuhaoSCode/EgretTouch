@@ -206,7 +206,7 @@ class Main extends eui.UILayer {
         let imgArray = new Array<string>();
         imgArray.push("egret_icon_png");
         imgArray.push("bg_jpg");
-        imgArray.push("bg_jpg");
+        imgArray.push("checkbox_select_disabled_png");
 
         let imageViewpager = new core.component.ImageViewpager({x:this.width,y:300},300,50,imgArray);
         imageViewpager.bottom = 400;

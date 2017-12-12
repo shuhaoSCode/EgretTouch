@@ -25,7 +25,7 @@ var core;
              * @param 图片地址  {number}    toast显示时间 默认1.5秒
              * @param 监听器    {number}    toastY轴的位置，默认当前view的百分之70高度
              */
-            function ImageViewpager(size, imgWidth, split, imgResList) {
+            function ImageViewpager(size, imgWidth, split, imgResList, ipl) {
                 var _this = _super.call(this) || this;
                 //设置大小
                 _this.width = size.x;
@@ -34,6 +34,7 @@ var core;
                 _this._split = split;
                 _this._imgResList = imgResList;
                 _this._imgWidth = imgWidth;
+                _this._indexItem = 0;
                 _this._imgList = new Array();
                 _this._imgMoveBeforeX = new Array();
                 _this._initViewPager();
@@ -50,9 +51,12 @@ var core;
                     imageItem.height = this_1.height;
                     imageItem.verticalCenter = 0;
                     imageItem.touchEnabled = true;
-                    //如果是第一张图片，居中显示
+                    //如果是第一张图片，居中显示。最后一张显示左边
                     if (i == 0) {
                         imageItem.x = (this_1.width - this_1._imgWidth) / 2;
+                    }
+                    if (i == this_1._imgResList.length - 1) {
+                        imageItem.x = this_1._imgList[0].x - (this_1._imgWidth + this_1._split);
                     }
                     else {
                         imageItem.x = this_1._imgList[0].x + (i * (this_1._imgWidth + this_1._split));
@@ -73,7 +77,13 @@ var core;
                         this.removeEventListener(egret.TouchEvent.TOUCH_MOVE, this.onItemgMove, this);
                         console.log("end");
                         for (var i_1 = 0; i_1 < this._imgList.length; i_1++) {
+                            var item = this._imgList[i_1];
+                            GCAnimation.translateAnimation(item, 200, { x: item.x + (this.width / 2 - this._imgList[this._indexItem].x - this._imgWidth / 2), y: item.y });
                         }
+                    }, this_1);
+                    //单击事件
+                    imageItem.addEventListener(egret.TouchEvent.TOUCH_END, function (e) {
+                        console.log("top");
                     }, this_1);
                 };
                 var this_1 = this;
@@ -81,6 +91,7 @@ var core;
                     _loop_1(i);
                 }
             };
+            //移动时执行
             ImageViewpager.prototype.onItemgMove = function (e) {
                 //当前选中item的下标
                 var index = this._getIndex(this._touchItem);
@@ -94,6 +105,10 @@ var core;
                         this._imgList[i].x = e.stageX - this.offsetItemX - (Math.abs(num) * (this._imgWidth + this._split));
                     }
                 }
+                console.log("onMove");
+                this.updateIndex();
+                this.updateIndex();
+                GCFilter.halo(this._imgList[this._indexItem]);
             };
             //获取当前下标
             ImageViewpager.prototype._getIndex = function (img) {
@@ -103,10 +118,111 @@ var core;
                     }
                 }
             };
+            //更新当前和x中心点最近的下标
+            ImageViewpager.prototype.updateIndex = function () {
+                //判断和x中点最近的item下标
+                for (var i = 0; i < this._imgList.length; i++) {
+                    if (Math.abs(this._imgList[i].x + this._imgWidth / 2 - this.width / 2) < Math.abs(this._imgList[this._indexItem].x + this._imgWidth / 2 - this.width / 2)) {
+                        this._indexItem = i;
+                    }
+                    GCFilter.unHalo(this._imgList[i]);
+                }
+                //-----------无线循环------------(可以优化 )
+                //计算左右两边item的下标
+                var indLeft = this._indexItem - 1;
+                if (indLeft < 0) {
+                    indLeft = indLeft + this._imgList.length;
+                }
+                var indRight = this._indexItem + 1;
+                if (indRight > this._imgList.length - 1) {
+                    indRight = indRight - this._imgList.length;
+                }
+                //当前命中item
+                var item = this._imgList[this._indexItem];
+                //设置左右两边item的位置
+                var leftSky = this._imgList[indLeft];
+                var rightSky = this._imgList[indRight];
+                leftSky.x = item.x - (leftSky.width + this._split);
+                rightSky.x = item.x + (rightSky.width + this._split);
+            };
+            ;
             return ImageViewpager;
         }(eui.Component));
         component.ImageViewpager = ImageViewpager;
         __reflect(ImageViewpager.prototype, "core.component.ImageViewpager");
     })(component = core.component || (core.component = {}));
 })(core || (core = {}));
+// TypeScript file
+var GCFilter;
+(function (GCFilter) {
+    /**
+     * 光晕
+     * @param view {egret.DisplayObject} 添加光晕的对象
+     * @param color? {number} 光晕颜色（默认蓝色）
+     * @param alpha? {number} 透明度 (默认0.8)
+     */
+    function halo(view, color, alpha) {
+        var colorGC = 0x33CCFF; /// 光晕的颜色，十六进制，不包含透明度
+        if (color != undefined) {
+            colorGC = color;
+        }
+        var alphaGC = 0.2; /// 光晕的颜色透明度，是对 color 参数的透明度设定。有效值为 0.0 到 1.0。例如，0.8 设置透明度值为 80%。
+        if (alphaGC != undefined) {
+            alphaGC = alpha;
+        }
+        var blurX = 55; /// 水平模糊量。有效值为 0 到 255.0（浮点）
+        var blurY = 35; /// 垂直模糊量。有效值为 0 到 255.0（浮点）
+        var strength = 2; /// 压印的强度，值越大，压印的颜色越深，而且发光与背景之间的对比度也越强。有效值为 0 到 255。暂未实现
+        var quality = 3 /* HIGH */; /// 应用滤镜的次数，建议用 BitmapFilterQuality 类的常量来体现
+        var inner = false; /// 指定发光是否为内侧发光，暂未实现
+        var knockout = false; /// 指定对象是否具有挖空效果，暂未实现
+        var glowFilter = new egret.GlowFilter(colorGC, alphaGC, blurX, blurY, strength, quality, inner, knockout);
+        view.filters = [glowFilter];
+    }
+    GCFilter.halo = halo;
+    /**
+     * 取消光晕
+     * @param view {egret.DisplayObject} （取消光晕的对象)
+     */
+    function unHalo(view) {
+        view.filters = undefined;
+    }
+    GCFilter.unHalo = unHalo;
+})(GCFilter || (GCFilter = {}));
+//動畫封裝
+var GCAnimation;
+(function (GCAnimation) {
+    /**
+     * 平移动画
+     * @param view {egret.DisplayObject} 对象的属性集合
+     * @param duration {number} 持续时间
+     * @param end {GCUtils.attributes.GCPrint} 动画停止位置
+     * @param start? {GCUtils.attributes.GCPront} 动画开始位置（可选参数，不填默认从实际位置开始）
+     */
+    function translateAnimation(view, duration, end, start) {
+        var tw = egret.Tween.get(view);
+        if (start != undefined) {
+            view.x = start.x;
+            view.y = start.y;
+        }
+        tw.to({ x: end.x, y: end.y }, duration);
+    }
+    GCAnimation.translateAnimation = translateAnimation;
+    /**
+     * 放大缩小动画
+     * @param view {egret.DisplayObject} 对象的属性集合
+     * @param duration {number} 持续时间
+     * @param end {Attributes.GCPrint} 动画停止位置
+     * @param start? {Attributes.GCPront} 动画开始位置（可选参数，不填默认从实际位置开始）
+     */
+    function sizeAnimation(view, size) {
+        var vw = view.width;
+        var vh = view.height;
+        view.width = vw * size.x;
+        view.height = vh * size.y;
+        view.x = view.x - (view.width - vw) / 2;
+        view.y = view.y - (view.height - vh) / 2;
+    }
+    GCAnimation.sizeAnimation = sizeAnimation;
+})(GCAnimation || (GCAnimation = {}));
 //# sourceMappingURL=GameTouch.js.map
